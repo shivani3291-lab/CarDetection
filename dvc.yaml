@@ -1,0 +1,91 @@
+stages:
+  preprocess:
+    cmd: python -m src.data.preprocess
+    deps:
+      - src/data/preprocess.py
+      - src/data/dataset.py
+      - data/raw/
+      - data/class_names.json
+    params:
+      - params.yaml:preprocess
+      - params.yaml:augmentation
+    outs:
+      - data/processed/manifest.json
+      - data/processed/summary.json
+
+  validate:
+    cmd: python -m src.data.validate
+    deps:
+      - src/data/validate.py
+      - data/processed/manifest.json
+    params:
+      - params.yaml:validation
+    outs:
+      - data/processed/validation_report.json
+
+  eda:
+    cmd: python scripts/run_eda.py
+    deps:
+      - scripts/run_eda.py
+      - data/processed/manifest.json
+    outs:
+      - reports/eda/
+
+  train_classifier:
+    cmd: python -m src.train.classifier_train --config configs/classifier_resnet50.yaml
+    deps:
+      - src/train/classifier_train.py
+      - src/models/classifier.py
+      - data/processed/manifest.json
+    params:
+      - params.yaml:classifier
+    outs:
+      - models/classifier/
+
+  train_detection:
+    cmd: python -m src.train.detection_train --config configs/detection_fasterrcnn.yaml
+    deps:
+      - src/train/detection_train.py
+      - src/models/faster_rcnn.py
+      - data/processed/manifest.json
+    params:
+      - params.yaml:detection
+    outs:
+      - models/detection/
+
+  generate_yolo:
+    cmd: python scripts/generate_yolo_dataset.py
+    deps:
+      - scripts/generate_yolo_dataset.py
+      - data/processed/manifest.json
+    outs:
+      - data/yolo/
+      - configs/stanford_cars.yaml
+
+  train_yolo:
+    cmd: python scripts/train_yolo.py
+    deps:
+      - scripts/train_yolo.py
+      - configs/stanford_cars.yaml
+      - data/yolo/
+    params:
+      - params.yaml:yolo
+    outs:
+      - models/yolo/
+
+  export_onnx:
+    cmd: python -m src.mlops.export_onnx
+    deps:
+      - src/mlops/export_onnx.py
+      - models/classifier/
+    outs:
+      - models/car_detector.onnx
+      - models/model_metadata.json
+
+  drift_monitor:
+    cmd: python -m src.mlops.drift_monitor
+    deps:
+      - src/mlops/drift_monitor.py
+      - data/processed/manifest.json
+    outs:
+      - reports/drift_report.html

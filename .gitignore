@@ -1,0 +1,70 @@
+# Data & models (tracked via DVC)
+data/raw/
+data/processed/manifest.json
+data/processed/validation_report.json
+data/processed/summary.json
+data/yolo/
+models/
+runs/
+mlruns/
+.dvc/cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ML artifacts
+*.onnx
+*.pt
+*.pth
+wandb/
+reports/drift_report.html
+
+# Secrets
+.env
+*.pem
+secrets.toml
+
+# Large archives
+*.zip
+
+# Logs
+*.log

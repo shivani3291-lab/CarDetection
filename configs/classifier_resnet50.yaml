@@ -1,0 +1,7 @@
+experiment_name: car_classification
+run_name: resnet50_finetune
+overrides:
+  model: resnet50
+  epochs: 20
+  batch_size: 32
+  lr: 0.0001

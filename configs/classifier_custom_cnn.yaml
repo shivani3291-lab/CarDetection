@@ -1,0 +1,8 @@
+experiment_name: car_classification
+run_name: custom_cnn_baseline
+overrides:
+  model: custom_cnn
+  epochs: 15
+  batch_size: 64
+  lr: 0.001
+  freeze_epochs: 0
