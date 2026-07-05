@@ -4,7 +4,7 @@ data/processed/manifest.json
 data/processed/validation_report.json
 data/processed/summary.json
 data/yolo/
-models/
+/models/
 runs/
 mlruns/
 .dvc/cache/
