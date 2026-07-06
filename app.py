@@ -134,12 +134,15 @@ else:
                     fig.update_traces(marker_color="#7F77DD")
                     st.plotly_chart(fig, use_container_width=True)
 
-            st.session_state.history.insert(
-                0, {"class": top["class"], "score": top["score"], "thumbnail": annotated}
-            )
+            fb_id = getattr(uploaded, "file_id", f"{uploaded.name}-{uploaded.size}")
+            history_logged_key = f"history_logged_{fb_id}"
+            if not st.session_state.get(history_logged_key):
+                st.session_state.history.insert(
+                    0, {"class": top["class"], "score": top["score"], "thumbnail": annotated}
+                )
+                st.session_state[history_logged_key] = True
 
             # ---------- Feedback ----------
-            fb_id = getattr(uploaded, "file_id", f"{uploaded.name}-{uploaded.size}")
             verdict_key = f"feedback_verdict_{fb_id}"
             logged_key = f"feedback_logged_{fb_id}"
 
