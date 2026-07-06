@@ -127,6 +127,12 @@ class Predictor:
             return predict_detection(image, self._detection_model, self.class_names, self._torch_device, conf_threshold)
         return []
 
+    def predict_topk(self, image: Image.Image, k: int = 5, image_size: int = 224) -> list[dict[str, Any]]:
+        """Ranked top-k guesses, classifier mode only (empty list otherwise)."""
+        if self._onnx_session is not None:
+            return predict_classifier_topk(image, self._onnx_session, self.class_names, k, image_size)
+        return []
+
 
 def load_predictor() -> Predictor:
     return Predictor(mode="auto")
@@ -151,6 +157,22 @@ def predict_classifier(
 
     w, h = image.size
     return [{"class": class_names[top_idx], "score": score, "bbox": [0.0, 0.0, float(w), float(h)]}]
+
+
+def predict_classifier_topk(
+    image: Image.Image,
+    session,
+    class_names: list[str],
+    k: int = 5,
+    image_size: int = 224,
+) -> list[dict[str, Any]]:
+    """Top-k ranked guesses (no confidence threshold - always returns k candidates)."""
+    tensor = preprocess(image, image_size=image_size)
+    outputs = session.run(None, {"image": tensor})
+    logits = outputs[0][0]
+    probs = _softmax(logits)
+    top_indices = np.argsort(probs)[::-1][:k]
+    return [{"class": class_names[i], "score": float(probs[i])} for i in top_indices]
 
 
 def predict_detection(
