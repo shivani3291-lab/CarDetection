@@ -1,7 +1,11 @@
 # Core ML
 torch>=2.1.0
 torchvision>=0.16.0
-ultralytics>=8.1.0
+# ultralytics is intentionally NOT installed by default: it pulls in the
+# GUI build of opencv-python (needs libGL/libgthread), which breaks headless
+# deployments like Streamlit Cloud. It's only needed for local YOLO training
+# (scripts/train_yolo.py, src/models/yolo.py) - install separately there:
+#   pip install ultralytics>=8.1.0
 
 # Data
 albumentations>=1.3.1

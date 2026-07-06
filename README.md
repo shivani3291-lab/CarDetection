@@ -41,7 +41,9 @@ python -m src.train.classifier_train --config configs/classifier_efficientnet.ya
 # Detection
 python -m src.train.detection_train --config configs/detection_fasterrcnn.yaml
 
-# YOLOv8
+# YOLOv8 (installs the GUI opencv-python build, so kept out of requirements.txt
+# to avoid breaking headless deployments - install it only when training YOLO)
+pip install ultralytics
 python scripts/generate_yolo_dataset.py
 python scripts/train_yolo.py
 
