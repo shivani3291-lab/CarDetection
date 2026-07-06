@@ -61,7 +61,18 @@ if not predictor.loaded:
         "`python -m src.train.classifier_train` then `python -m src.mlops.export_onnx`"
     )
 else:
-    conf = st.sidebar.slider("Confidence threshold", 0.0, 1.0, 0.5, 0.05)
+    conf = st.sidebar.slider(
+        "Confidence threshold",
+        0.0,
+        1.0,
+        0.5,
+        0.05,
+        help=(
+            "With 196 similar classes, even a correct best guess can score low on "
+            "raw confidence. This only flags results below the threshold for a "
+            "second look — it no longer hides them."
+        ),
+    )
     st.caption(
         "Tip: a clear 3/4 front or side angle, with the whole car in frame and good "
         "lighting, gives the most reliable result."
@@ -71,13 +82,26 @@ else:
     if uploaded:
         image = Image.open(uploaded).convert("RGB")
         with st.spinner("Running inference..."):
-            results = predictor.predict(image, conf_threshold=conf)
-            topk = predictor.predict_topk(image, k=5)
+            if predictor.mode == "onnx":
+                # Classifier always has a best guess among 196 classes - show it
+                # regardless of the threshold, and just flag when it's a weak one.
+                topk = predictor.predict_topk(image, k=5)
+                top = topk[0] if topk else None
+                low_confidence = bool(top) and top["score"] < conf
+                bbox_result = (
+                    [{"class": top["class"], "score": top["score"], "bbox": [0, 0, image.width, image.height]}]
+                    if top
+                    else []
+                )
+            else:
+                # A real object detector: "nothing above threshold" is a valid outcome.
+                bbox_result = predictor.predict(image, conf_threshold=conf)
+                topk = []
+                top = bbox_result[0] if bbox_result else None
+                low_confidence = False
 
-        if results:
-            annotated = draw_boxes(image, results)
-            ranked = sorted(results, key=lambda x: -x["score"])
-            top = ranked[0]
+        if top:
+            annotated = draw_boxes(image, bbox_result)
 
             col1, col2 = st.columns([1.3, 1])
             with col1:
@@ -86,6 +110,11 @@ else:
                 st.markdown(f"### {top['class']}")
                 st.markdown(f"#### {top['score']:.1%} confidence")
                 st.progress(top["score"])
+                if low_confidence:
+                    st.warning(
+                        f"Below your {conf:.0%} threshold — treat this as a best guess "
+                        "rather than a certain match."
+                    )
 
                 if len(topk) > 1:
                     st.caption("Other close matches")
@@ -108,7 +137,7 @@ else:
                 0, {"class": top["class"], "score": top["score"], "thumbnail": annotated}
             )
         else:
-            st.info("No detection above confidence threshold. Try lowering the threshold in the sidebar.")
+            st.info("No car detected in this image. Try a clearer photo with the car in frame.")
 
 st.divider()
 
