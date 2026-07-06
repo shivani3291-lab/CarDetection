@@ -79,3 +79,16 @@ def feedback_summary() -> dict[str, Any]:
         "correct": correct,
         "incorrect": len(records) - correct,
     }
+
+
+def out_of_taxonomy_requests(class_names: list[str]) -> list[tuple[str, int]]:
+    """Corrected labels users typed via "Other" that aren't one of the known
+    classes - i.e. cars the model can never get right until the dataset grows.
+    Returns (label, count) pairs sorted most-requested first."""
+    known = {c.lower() for c in class_names}
+    counts: dict[str, int] = {}
+    for r in read_feedback():
+        corrected = r.get("corrected_class")
+        if corrected and corrected.lower() not in known:
+            counts[corrected] = counts.get(corrected, 0) + 1
+    return sorted(counts.items(), key=lambda kv: kv[1], reverse=True)

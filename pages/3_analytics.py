@@ -3,8 +3,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-from src.serve.feedback import feedback_summary
-from src.serve.session import render_model_status_sidebar
+from src.serve.feedback import feedback_summary, out_of_taxonomy_requests
+from src.serve.session import get_class_names, render_model_status_sidebar
 from src.serve.viz import render_3d_car
 
 with st.sidebar:
@@ -46,3 +46,12 @@ fcol1, fcol2, fcol3 = st.columns(3)
 fcol1.metric("Total feedback", fb["total"])
 fcol2.metric("Confirmed correct", fb["correct"])
 fcol3.metric("Reported incorrect", fb["incorrect"])
+
+gaps = out_of_taxonomy_requests(get_class_names())
+if gaps:
+    st.caption("Cars users have flagged that aren't one of the 196 known classes yet:")
+    st.dataframe(
+        {"Requested car": [g[0] for g in gaps], "Times reported": [g[1] for g in gaps]},
+        hide_index=True,
+        use_container_width=True,
+    )

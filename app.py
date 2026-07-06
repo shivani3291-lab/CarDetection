@@ -167,17 +167,32 @@ else:
                 else:
                     corrected = st.selectbox(
                         "What's the correct make/model? (optional)",
-                        ["Not sure"] + class_names,
+                        ["Not sure", "Other (type below)", *class_names],
                         key=f"{fb_id}_correction",
                     )
+                    other_text = ""
+                    if corrected == "Other (type below)":
+                        other_text = st.text_input(
+                            "Type the correct make/model/year",
+                            key=f"{fb_id}_correction_other",
+                            help="Not in the list above? This car may not be one of the "
+                            "196 classes the model knows - typing it here still helps us "
+                            "track how often that happens.",
+                        )
                     if st.button("Submit correction", key=f"{fb_id}_submit"):
+                        if corrected == "Not sure":
+                            final_corrected = None
+                        elif corrected == "Other (type below)":
+                            final_corrected = other_text.strip() or None
+                        else:
+                            final_corrected = corrected
                         log_feedback(
                             image,
                             top["class"],
                             top["score"],
                             False,
                             conf,
-                            corrected_class=None if corrected == "Not sure" else corrected,
+                            corrected_class=final_corrected,
                             topk=topk,
                         )
                         st.session_state[logged_key] = True
