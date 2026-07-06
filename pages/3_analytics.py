@@ -11,8 +11,7 @@ with st.sidebar:
 
 st.title("3D car visualization")
 
-angle = st.slider("Rotate model", 0, 360, 25)
-components.html(render_3d_car(angle), height=200)
+components.html(render_3d_car(), height=320)
 
 st.divider()
 st.subheader("Session stats")

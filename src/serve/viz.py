@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from typing import Any
 
 import cv2
@@ -43,13 +44,9 @@ def plot_class_distribution(class_counts: dict[str, int], save_path: str | None 
     return fig
 
 
-def render_3d_car(label: str | None = None, score: float | None = None) -> str:
-    """A continuously auto-rotating low-poly 3D car (real CSS 3D transforms, not an image).
-
-    With no args it shows a generic default car; pass a predicted class name
-    (and optionally its confidence score) to label the same rotating car with
-    a detection result instead.
-    """
+def _render_3d_car_css_fallback(label: str | None = None, score: float | None = None) -> str:
+    """Low-poly CSS-only rotating car. Used as an instant, dependency-free
+    fallback while (or if) the real WebGL model below fails to load."""
     label_html = ""
     if label:
         pct = f" &middot; {score:.1%}" if score is not None else ""
@@ -167,4 +164,166 @@ def render_3d_car(label: str | None = None, score: float | None = None) -> str:
       <div class="car3d-ground"></div>
       {label_html}
     </div>
+    """
+
+
+def render_3d_car(label: str | None = None, score: float | None = None, height: int = 320) -> str:
+    """A real, continuously auto-rotating 3D car rendered with Three.js/WebGL
+    (an actual detailed car model, not an abstract shape).
+
+    With no args it shows a generic sample car; pass a predicted class name
+    (and optionally its confidence score) to label the same rotating car with
+    a detection result instead. Falls back instantly to a simple CSS car if
+    the WebGL model can't load (e.g. no network), so the widget is never blank.
+    """
+    uid = uuid.uuid4().hex[:8]
+    label_html = ""
+    if label:
+        pct = f" &middot; {score:.1%}" if score is not None else ""
+        label_html = f'<div class="car3d-label">{label}{pct}</div>'
+
+    fallback_html = _render_3d_car_css_fallback(label, score)
+
+    return f"""
+    <style>
+      .car3d-gl-wrap-{uid} {{
+        position: relative;
+        width: 100%;
+        height: {height}px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        font-family: -apple-system, "Segoe UI", sans-serif;
+      }}
+      .car3d-gl-canvas-{uid} {{
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+      }}
+      .car3d-gl-fallback-{uid} {{
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.4s ease;
+      }}
+      .car3d-label {{
+        margin-top: 6px;
+        font-size: 12.5px; font-weight: 600; color: #52e3d4;
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+        text-align: center; letter-spacing: 0.01em;
+      }}
+    </style>
+    <div class="car3d-gl-wrap-{uid}" id="car3d-wrap-{uid}">
+      <div class="car3d-gl-fallback-{uid}" id="car3d-fallback-{uid}">{fallback_html}</div>
+      <canvas class="car3d-gl-canvas-{uid}" id="car3d-canvas-{uid}" style="opacity:0;"></canvas>
+      {label_html}
+    </div>
+    <script type="importmap">
+      {{
+        "imports": {{
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }}
+      }}
+    </script>
+    <script type="module">
+      (async () => {{
+        try {{
+          const THREE = await import('three');
+          const {{ GLTFLoader }} = await import('three/addons/loaders/GLTFLoader.js');
+          const {{ DRACOLoader }} = await import('three/addons/loaders/DRACOLoader.js');
+
+          const wrap = document.getElementById('car3d-wrap-{uid}');
+          const canvas = document.getElementById('car3d-canvas-{uid}');
+          const fallback = document.getElementById('car3d-fallback-{uid}');
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+          const width = wrap.clientWidth || 320;
+          const height = {height};
+
+          const scene = new THREE.Scene();
+          const camera = new THREE.PerspectiveCamera(32, width / height, 0.1, 100);
+          camera.position.set(4.4, 1.7, 4.4);
+          camera.lookAt(0, 0.3, 0);
+
+          const renderer = new THREE.WebGLRenderer({{ canvas, antialias: true, alpha: true }});
+          renderer.setSize(width, height, false);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+          scene.add(new THREE.HemisphereLight(0xffffff, 0x1a1a2e, 1.15));
+          const key = new THREE.DirectionalLight(0xffffff, 2.4);
+          key.position.set(5, 8, 5);
+          scene.add(key);
+          const rim = new THREE.DirectionalLight(0x52e3d4, 1.1);
+          rim.position.set(-6, 3, -6);
+          scene.add(rim);
+
+          const ground = new THREE.Mesh(
+            new THREE.CircleGeometry(2.6, 48),
+            new THREE.MeshBasicMaterial({{ color: 0x52e3d4, transparent: true, opacity: 0.07 }})
+          );
+          ground.rotation.x = -Math.PI / 2;
+          ground.position.y = -0.01;
+          scene.add(ground);
+
+          let car = null;
+          const dracoLoader = new DRACOLoader();
+          dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
+          const loader = new GLTFLoader();
+          loader.setDRACOLoader(dracoLoader);
+
+          const loadTimeout = setTimeout(() => {{
+            throw new Error('3D model load timed out');
+          }}, 12000);
+
+          loader.load(
+            'https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/models/gltf/ferrari.glb',
+            (gltf) => {{
+              clearTimeout(loadTimeout);
+              car = gltf.scene;
+              const box = new THREE.Box3().setFromObject(car);
+              const size = box.getSize(new THREE.Vector3());
+              const center = box.getCenter(new THREE.Vector3());
+              car.position.sub(center);
+              car.position.y += size.y / 2 - (box.max.y - center.y);
+              const maxDim = Math.max(size.x, size.y, size.z);
+              car.scale.setScalar(2.6 / maxDim);
+              scene.add(car);
+
+              fallback.style.opacity = '0';
+              canvas.style.transition = 'opacity 0.5s ease';
+              canvas.style.opacity = '1';
+              setTimeout(() => {{ fallback.style.display = 'none'; }}, 450);
+            }},
+            (xhr) => {{
+              console.log('CarVision: model load progress', xhr.loaded, '/', xhr.total);
+            }},
+            (err) => {{
+              clearTimeout(loadTimeout);
+              console.warn('CarVision: 3D model failed to load, keeping CSS fallback:', err && (err.message || err.toString()), err);
+            }}
+          );
+
+          function animate() {{
+            requestAnimationFrame(animate);
+            if (car && !reduceMotion) car.rotation.y += 0.007;
+            renderer.render(scene, camera);
+          }}
+          animate();
+
+          window.addEventListener('resize', () => {{
+            const w = wrap.clientWidth || 320;
+            camera.aspect = w / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, height, false);
+          }});
+        }} catch (e) {{
+          console.warn('CarVision: WebGL 3D car unavailable, using CSS fallback', e);
+        }}
+      }})();
+    </script>
     """
