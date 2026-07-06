@@ -167,16 +167,36 @@ def _render_3d_car_css_fallback(label: str | None = None, score: float | None = 
     """
 
 
+_FERRARI_URL = "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/models/gltf/ferrari.glb"
+_TRUCK_URL = "https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Assets@main/Models/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb"
+
+# Boxy/utility body styles get the truck-shaped model; everything else
+# (sedans, coupes, convertibles, hatchbacks...) falls back to the sports
+# car shape - the closest of the two available verified models. There's no
+# dedicated sedan/SUV asset verified yet, so this is a real approximation,
+# not a claim of exact body-style accuracy.
+_TRUCK_KEYWORDS = ("van", "pickup", "cab", "truck", "suv")
+
+
+def _pick_model_url(label: str | None) -> str:
+    if label and any(kw in label.lower() for kw in _TRUCK_KEYWORDS):
+        return _TRUCK_URL
+    return _FERRARI_URL
+
+
 def render_3d_car(label: str | None = None, score: float | None = None, height: int = 320) -> str:
     """A real, continuously auto-rotating 3D car rendered with Three.js/WebGL
     (an actual detailed car model, not an abstract shape).
 
     With no args it shows a generic sample car; pass a predicted class name
     (and optionally its confidence score) to label the same rotating car with
-    a detection result instead. Falls back instantly to a simple CSS car if
-    the WebGL model can't load (e.g. no network), so the widget is never blank.
+    a detection result instead - the model shown is picked by body-style
+    keywords in the label (see _pick_model_url). Falls back instantly to a
+    simple CSS car if the WebGL model can't load (e.g. no network), so the
+    widget is never blank.
     """
     uid = uuid.uuid4().hex[:8]
+    model_url = _pick_model_url(label)
     label_html = ""
     if label:
         pct = f" &middot; {score:.1%}" if score is not None else ""
@@ -281,7 +301,7 @@ def render_3d_car(label: str | None = None, score: float | None = None, height: 
           }}, 12000);
 
           loader.load(
-            'https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/models/gltf/ferrari.glb',
+            '{model_url}',
             (gltf) => {{
               clearTimeout(loadTimeout);
               car = gltf.scene;
