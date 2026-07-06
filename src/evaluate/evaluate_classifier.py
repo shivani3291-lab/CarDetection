@@ -56,7 +56,10 @@ def main() -> None:
             preds.extend(out.argmax(dim=1).cpu().tolist())
             labels.extend(y.tolist())
 
-    report = classification_report(labels, preds, target_names=class_names[:5], output_dict=False)
+    present = sorted(set(labels) | set(preds))
+    report = classification_report(
+        labels, preds, labels=present, target_names=[class_names[i] for i in present], output_dict=False
+    )
     print(report)
 
     out_dir = root / "reports" / "evaluation"

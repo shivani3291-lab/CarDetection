@@ -48,6 +48,7 @@ def main() -> None:
         input_names=["image"],
         output_names=["logits"],
         dynamic_axes={"image": {0: "batch_size"}, "logits": {0: "batch_size"}},
+        dynamo=False,
     )
 
     import onnxruntime as ort
