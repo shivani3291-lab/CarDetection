@@ -3,6 +3,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
+from src.serve.feedback import feedback_summary
 from src.serve.session import render_model_status_sidebar
 from src.serve.viz import render_3d_car
 
@@ -33,3 +34,15 @@ if history:
     fig = px.line(df.reset_index(), x="index", y="score", title="Confidence over time")
     fig.update_layout(template="plotly_dark")
     st.plotly_chart(fig, use_container_width=True)
+
+st.divider()
+st.subheader("User feedback collected")
+st.caption(
+    "Thumbs up/down from the detect page, saved as labeled samples for future "
+    "retraining or calibration - not used to alter any displayed confidence score."
+)
+fb = feedback_summary()
+fcol1, fcol2, fcol3 = st.columns(3)
+fcol1.metric("Total feedback", fb["total"])
+fcol2.metric("Confirmed correct", fb["correct"])
+fcol3.metric("Reported incorrect", fb["incorrect"])

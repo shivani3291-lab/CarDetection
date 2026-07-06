@@ -4,6 +4,7 @@ import plotly.express as px
 import streamlit as st
 from PIL import Image
 
+from src.serve.feedback import log_feedback
 from src.serve.session import get_class_names, get_predictor, render_model_status_sidebar
 from src.serve.viz import draw_boxes
 
@@ -136,6 +137,48 @@ else:
             st.session_state.history.insert(
                 0, {"class": top["class"], "score": top["score"], "thumbnail": annotated}
             )
+
+            # ---------- Feedback ----------
+            fb_id = getattr(uploaded, "file_id", f"{uploaded.name}-{uploaded.size}")
+            verdict_key = f"feedback_verdict_{fb_id}"
+            logged_key = f"feedback_logged_{fb_id}"
+
+            st.divider()
+            verdict = st.session_state.get(verdict_key)
+            if verdict is None:
+                st.markdown("**Was this detection correct?**")
+                yes_col, no_col, _ = st.columns([1, 1, 4])
+                if yes_col.button("👍 Correct", key=f"{fb_id}_yes"):
+                    log_feedback(image, top["class"], top["score"], True, conf, topk=topk)
+                    st.session_state[verdict_key] = "correct"
+                    st.session_state[logged_key] = True
+                    st.rerun()
+                if no_col.button("👎 Incorrect", key=f"{fb_id}_no"):
+                    st.session_state[verdict_key] = "incorrect"
+                    st.rerun()
+            elif verdict == "correct":
+                st.success("Thanks - logged as confirmed feedback for future model calibration.")
+            elif verdict == "incorrect":
+                if st.session_state.get(logged_key):
+                    st.info("Thanks - logged as incorrect feedback for future model calibration.")
+                else:
+                    corrected = st.selectbox(
+                        "What's the correct make/model? (optional)",
+                        ["Not sure"] + class_names,
+                        key=f"{fb_id}_correction",
+                    )
+                    if st.button("Submit correction", key=f"{fb_id}_submit"):
+                        log_feedback(
+                            image,
+                            top["class"],
+                            top["score"],
+                            False,
+                            conf,
+                            corrected_class=None if corrected == "Not sure" else corrected,
+                            topk=topk,
+                        )
+                        st.session_state[logged_key] = True
+                        st.rerun()
         else:
             st.info("No car detected in this image. Try a clearer photo with the car in frame.")
 

@@ -4,6 +4,7 @@ data/processed/manifest.json
 data/processed/validation_report.json
 data/processed/summary.json
 data/yolo/
+data/feedback/
 /models/
 runs/
 mlruns/
