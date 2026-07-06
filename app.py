@@ -33,4 +33,4 @@ with col1:
     )
 with col2:
     st.subheader("3D preview")
-    components.html(render_3d_car(25), height=180)
+    components.html(render_3d_car(), height=220)

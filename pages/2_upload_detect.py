@@ -1,10 +1,11 @@
 """Upload and detect cars from static images."""
 
 import streamlit as st
+import streamlit.components.v1 as components
 from PIL import Image
 
 from src.serve.session import get_class_names, get_predictor, render_model_status_sidebar
-from src.serve.viz import draw_boxes
+from src.serve.viz import draw_boxes, render_3d_car
 
 st.title("Upload and detect")
 
@@ -35,13 +36,17 @@ if uploaded:
 
     if results:
         annotated = draw_boxes(image, results)
-        col1, col2 = st.columns(2)
+        ranked = sorted(results, key=lambda x: -x["score"])
+        col1, col2, col3 = st.columns([1.3, 1, 1])
         with col1:
             st.image(annotated, caption="Detection result", use_container_width=True)
         with col2:
-            for r in sorted(results, key=lambda x: -x["score"]):
+            for r in ranked:
                 st.metric(r["class"], f"{r['score']:.1%}")
                 st.progress(r["score"])
+        with col3:
+            top = ranked[0]
+            components.html(render_3d_car(label=top["class"], score=top["score"]), height=220)
 
         st.session_state.history.insert(
             0,
