@@ -1,6 +1,6 @@
 # CarVision AI — Car Detection Capstone
 
-![CI](https://github.com/yourname/car-detection/actions/workflows/ml_pipeline.yml/badge.svg)
+![CI](https://github.com/shivani3291-lab/CarDetection/actions/workflows/ml_pipeline.yml/badge.svg)
 ![DVC](https://img.shields.io/badge/data-DVC-blue)
 ![MLflow](https://img.shields.io/badge/tracking-MLflow-orange)
 ![Streamlit](https://img.shields.io/badge/UI-Streamlit-red)
