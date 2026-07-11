@@ -10,4 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping app
-        run: curl -sS -o /dev/null -w "%{http_code}" https://cardetection-fvwv567sbk9exwnkaepikr.streamlit.app/
+        run: |
+          curl -sS -L --fail --max-time 30 \
+            -c cookies.txt -b cookies.txt \
+            -o /dev/null -w "HTTP %{http_code}\n" \
+            https://cardetection-fvwv567sbk9exwnkaepikr.streamlit.app/
