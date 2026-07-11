@@ -9,7 +9,6 @@ from src.data.dataset import build_manifest, load_class_names, project_root, res
 from src.data.pytorch_datasets import detection_collate_fn
 from src.models.cnn import CarCNN
 
-
 ROOT = project_root()
 
 
@@ -39,7 +38,6 @@ def test_detection_collate_fn():
 
 
 def test_resolve_relative_path():
-    rel = "data/raw/Car Images/Train Images/.gitkeep"
     # Only tests path resolution logic when file exists
     raw = ROOT / "data" / "raw"
     if not raw.exists():

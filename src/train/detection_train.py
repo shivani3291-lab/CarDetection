@@ -61,7 +61,9 @@ def main() -> None:
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = build_faster_rcnn(num_classes=num_classes).to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=det_params["lr"], momentum=0.9, weight_decay=0.0005)
+    optimizer = torch.optim.SGD(
+        model.parameters(), lr=det_params["lr"], momentum=0.9, weight_decay=0.0005
+    )
 
     output_dir = root / "models" / "detection"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -126,7 +128,10 @@ def main() -> None:
         with open(metrics_path, "w", encoding="utf-8") as f:
             json.dump({"mAP@0.5": best_map, "inference_latency_ms": latency_ms}, f, indent=2)
 
-        print(f"Saved detection model -> {best_path} (mAP@0.5={best_map:.3f}, latency {latency_ms:.1f} ms)")
+        print(
+            f"Saved detection model -> {best_path} "
+            f"(mAP@0.5={best_map:.3f}, latency {latency_ms:.1f} ms)"
+        )
 
 
 if __name__ == "__main__":

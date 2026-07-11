@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 import zipfile
 from pathlib import Path
 
@@ -52,7 +51,9 @@ def data_ready(root: Path) -> bool:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Set up Stanford Cars dataset on a new machine")
     parser.add_argument("--zip", type=str, default=None, help="Path to Car Images.zip")
-    parser.add_argument("--skip-extract", action="store_true", help="Skip extraction if data exists")
+    parser.add_argument(
+        "--skip-extract", action="store_true", help="Skip extraction if data exists"
+    )
     args = parser.parse_args()
 
     root = project_root()
@@ -63,7 +64,9 @@ def main() -> None:
     if data_ready(root):
         print("Dataset already present in data/raw/")
     elif args.skip_extract:
-        raise FileNotFoundError("data/raw/ is empty. Provide --zip or extract Car Images.zip manually.")
+        raise FileNotFoundError(
+            "data/raw/ is empty. Provide --zip or extract Car Images.zip manually."
+        )
     else:
         zip_path = Path(args.zip) if args.zip else find_zip(root)
         if zip_path is None:

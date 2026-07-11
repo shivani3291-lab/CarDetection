@@ -52,7 +52,9 @@ class CarDetectionDataset(Dataset):
     ):
         self.samples = samples
         self.image_size = image_size
-        self.transform = get_train_transform(image_size, aug_params) if train else get_val_transform(image_size)
+        self.transform = (
+            get_train_transform(image_size, aug_params) if train else get_val_transform(image_size)
+        )
 
     def __len__(self) -> int:
         return len(self.samples)
@@ -78,7 +80,11 @@ class CarDetectionDataset(Dataset):
             "boxes": boxes,
             "labels": labels + 1,
             "image_id": torch.tensor([idx]),
-            "area": (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1]) if len(boxes) else torch.zeros(0),
+            "area": (
+                (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+                if len(boxes)
+                else torch.zeros(0)
+            ),
             "iscrowd": torch.zeros(len(boxes), dtype=torch.int64),
         }
         return transformed["image"], target
@@ -92,7 +98,9 @@ def load_split_datasets(
     samples = load_manifest(manifest_path)
     train_samples = [s for s in samples if s.split == "train"]
     test_samples = [s for s in samples if s.split == "test"]
-    train_ds = CarClassificationDataset(train_samples, image_size=image_size, train=True, aug_params=aug_params)
+    train_ds = CarClassificationDataset(
+        train_samples, image_size=image_size, train=True, aug_params=aug_params
+    )
     test_ds = CarClassificationDataset(test_samples, image_size=image_size, train=False)
     return train_ds, test_ds
 

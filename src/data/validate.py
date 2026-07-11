@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 from PIL import Image
 
-from src.data.dataset import load_manifest, load_class_names, project_root, resolve_image_path
+from src.data.dataset import load_class_names, load_manifest, project_root, resolve_image_path
 
 
 def _load_validation_params() -> dict:
@@ -21,7 +21,9 @@ def _load_validation_params() -> dict:
     return params.get("validation", {"min_train_class_coverage": 0.99, "fail_on_error": True})
 
 
-def validate_manifest(manifest_path: Path, class_names_path: Path, val_params: dict | None = None) -> dict:
+def validate_manifest(
+    manifest_path: Path, class_names_path: Path, val_params: dict | None = None
+) -> dict:
     val_params = val_params or _load_validation_params()
     root = project_root()
     samples = load_manifest(manifest_path, root=root)
@@ -74,7 +76,8 @@ def validate_manifest(manifest_path: Path, class_names_path: Path, val_params: d
         )
     elif len(train_class_ids) < num_classes:
         warnings.append(
-            f"Only {len(train_class_ids)}/{num_classes} classes in train split (within coverage threshold)"
+            f"Only {len(train_class_ids)}/{num_classes} classes in train split "
+            "(within coverage threshold)"
         )
 
     ge_results = _run_great_expectations(samples, class_names, root)
@@ -130,7 +133,11 @@ def _run_great_expectations(samples: list, class_names: list[str], root: Path) -
         for name, result in expectations:
             if not result.success:
                 failed.append(name)
-        return {"engine": "great_expectations", "failed_expectations": failed, "checks_run": len(expectations)}
+        return {
+            "engine": "great_expectations",
+            "failed_expectations": failed,
+            "checks_run": len(expectations),
+        }
     except Exception:
         if df["class_id"].min() < 0 or df["class_id"].max() >= len(class_names):
             failed.append("class_id out of range")

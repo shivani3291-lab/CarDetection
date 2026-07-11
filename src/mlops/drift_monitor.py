@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pandas as pd
@@ -34,9 +33,11 @@ def build_demo_current_from_test(manifest_path: Path, limit: int = 500) -> pd.Da
     return pd.DataFrame({"class_name": [s.class_name for s in test_samples]})
 
 
-def run_drift_report(reference_df: pd.DataFrame, current_df: pd.DataFrame, output_path: Path) -> dict:
-    from evidently.report import Report
+def run_drift_report(
+    reference_df: pd.DataFrame, current_df: pd.DataFrame, output_path: Path
+) -> dict:
     from evidently.metric_preset import DataDriftPreset
+    from evidently.report import Report
 
     report = Report(metrics=[DataDriftPreset()])
     report.run(reference_data=reference_df, current_data=current_df)

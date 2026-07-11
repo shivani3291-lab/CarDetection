@@ -69,7 +69,9 @@ def main() -> None:
     image_size = params["preprocess"]["image_size"]
 
     manifest_path = root / "data" / "processed" / "manifest.json"
-    train_ds, val_ds = load_split_datasets(manifest_path, image_size=image_size, aug_params=aug_params)
+    train_ds, val_ds = load_split_datasets(
+        manifest_path, image_size=image_size, aug_params=aug_params
+    )
 
     train_loader = DataLoader(
         train_ds,

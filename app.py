@@ -45,7 +45,10 @@ with step1:
 with step2:
     with st.container(border=True):
         st.markdown("**2. The model looks it over**")
-        st.caption("A ResNet-50 classifier trained on 196 makes/models scores your photo in under a second.")
+        st.caption(
+            "A ResNet-50 classifier trained on 196 makes/models scores your photo "
+            "in under a second."
+        )
 with step3:
     with st.container(border=True):
         st.markdown("**3. Get ranked results**")
@@ -90,7 +93,13 @@ else:
                 top = topk[0] if topk else None
                 low_confidence = bool(top) and top["score"] < conf
                 bbox_result = (
-                    [{"class": top["class"], "score": top["score"], "bbox": [0, 0, image.width, image.height]}]
+                    [
+                        {
+                            "class": top["class"],
+                            "score": top["score"],
+                            "bbox": [0, 0, image.width, image.height],
+                        }
+                    ]
                     if top
                     else []
                 )

@@ -6,7 +6,6 @@ import streamlit as st
 
 from src.serve.inference import load_class_names, load_model_metadata, load_predictor
 
-
 _PREDICTOR_CACHE_VERSION = 2  # bump this whenever Predictor's interface changes -
 # st.cache_resource keys on get_predictor()'s own source, not on src.serve.inference,
 # so editing the Predictor class alone won't invalidate an already-cached instance
@@ -29,7 +28,9 @@ def get_model_info() -> dict:
     if not predictor.loaded:
         return {
             "loaded": False,
-            "message": "Run: python -m src.train.classifier_train && python -m src.mlops.export_onnx",
+            "message": (
+                "Run: python -m src.train.classifier_train && python -m src.mlops.export_onnx"
+            ),
         }
     info = {
         "loaded": True,

@@ -8,10 +8,12 @@ from typing import Any
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 
-def draw_boxes(image: Image.Image, results: list[dict[str, Any]], color: tuple = (127, 119, 221)) -> Image.Image:
+def draw_boxes(
+    image: Image.Image, results: list[dict[str, Any]], color: tuple = (127, 119, 221)
+) -> Image.Image:
     annotated = image.copy()
     draw = ImageDraw.Draw(annotated)
     for r in results:
@@ -22,16 +24,28 @@ def draw_boxes(image: Image.Image, results: list[dict[str, Any]], color: tuple =
     return annotated
 
 
-def draw_boxes_cv(image_bgr: np.ndarray, boxes: list, labels: list[str], scores: list[float]) -> np.ndarray:
+def draw_boxes_cv(
+    image_bgr: np.ndarray, boxes: list, labels: list[str], scores: list[float]
+) -> np.ndarray:
     out = image_bgr.copy()
     for box, label, score in zip(boxes, labels, scores):
         x1, y1, x2, y2 = map(int, box)
         cv2.rectangle(out, (x1, y1), (x2, y2), (221, 119, 127), 2)
-        cv2.putText(out, f"{label} {score:.0%}", (x1, max(20, y1 - 5)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (221, 119, 127), 1)
+        cv2.putText(
+            out,
+            f"{label} {score:.0%}",
+            (x1, max(20, y1 - 5)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (221, 119, 127),
+            1,
+        )
     return out
 
 
-def plot_class_distribution(class_counts: dict[str, int], save_path: str | None = None) -> plt.Figure:
+def plot_class_distribution(
+    class_counts: dict[str, int], save_path: str | None = None
+) -> plt.Figure:
     names = list(class_counts.keys())
     counts = list(class_counts.values())
     fig, ax = plt.subplots(figsize=(14, 5))
@@ -126,7 +140,9 @@ def _render_3d_car_css_fallback(label: str | None = None, score: float | None = 
         border: 1px solid rgba(255,255,255,0.08);
       }}
       .car3d .left .band, .car3d .right .band {{ left: 14%; right: 14%; }}
-      .car3d .lamp {{ position: absolute; bottom: 12px; width: 24px; height: 7px; border-radius: 4px; }}
+      .car3d .lamp {{
+        position: absolute; bottom: 12px; width: 24px; height: 7px; border-radius: 4px;
+      }}
       .car3d .lamp.l {{ left: 8px; }}
       .car3d .lamp.r {{ right: 8px; }}
       .car3d .front .lamp {{ background: #52e3d4; box-shadow: 0 0 10px 2px rgba(82,227,212,0.5); }}
@@ -140,7 +156,9 @@ def _render_3d_car_css_fallback(label: str | None = None, score: float | None = 
       .car3d .wheel.b {{ right: 6px; }}
       .car3d-ground {{
         width: 150px; height: 14px; margin-top: 8px;
-        background: radial-gradient(ellipse at center, rgba(82,227,212,0.18), rgba(82,227,212,0) 72%);
+        background: radial-gradient(
+          ellipse at center, rgba(82,227,212,0.18), rgba(82,227,212,0) 72%
+        );
         filter: blur(1px);
       }}
       .car3d-label {{
@@ -153,10 +171,18 @@ def _render_3d_car_css_fallback(label: str | None = None, score: float | None = 
     <div class="car3d-stage">
       <div class="car3d-rig">
         <div class="car3d">
-          <div class="face front"><div class="band"></div><div class="lamp l"></div><div class="lamp r"></div></div>
-          <div class="face back"><div class="band"></div><div class="lamp l"></div><div class="lamp r"></div></div>
-          <div class="face left"><div class="band"></div><div class="wheel a"></div><div class="wheel b"></div></div>
-          <div class="face right"><div class="band"></div><div class="wheel a"></div><div class="wheel b"></div></div>
+          <div class="face front">
+            <div class="band"></div><div class="lamp l"></div><div class="lamp r"></div>
+          </div>
+          <div class="face back">
+            <div class="band"></div><div class="lamp l"></div><div class="lamp r"></div>
+          </div>
+          <div class="face left">
+            <div class="band"></div><div class="wheel a"></div><div class="wheel b"></div>
+          </div>
+          <div class="face right">
+            <div class="band"></div><div class="wheel a"></div><div class="wheel b"></div>
+          </div>
           <div class="face top"></div>
           <div class="face bottom"></div>
         </div>
@@ -324,7 +350,11 @@ def render_3d_car(label: str | None = None, score: float | None = None, height: 
             }},
             (err) => {{
               clearTimeout(loadTimeout);
-              console.warn('CarVision: 3D model failed to load, keeping CSS fallback:', err && (err.message || err.toString()), err);
+              console.warn(
+                'CarVision: 3D model failed to load, keeping CSS fallback:',
+                err && (err.message || err.toString()),
+                err
+              );
             }}
           );
 

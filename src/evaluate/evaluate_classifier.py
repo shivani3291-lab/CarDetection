@@ -35,7 +35,9 @@ def main() -> None:
     image_size = params["preprocess"]["image_size"]
     class_names = load_class_names(root / "data" / "class_names.json")
 
-    _, test_ds = load_split_datasets(root / "data" / "processed" / "manifest.json", image_size=image_size)
+    _, test_ds = load_split_datasets(
+        root / "data" / "processed" / "manifest.json", image_size=image_size
+    )
     loader = DataLoader(test_ds, batch_size=32, shuffle=False)
 
     model = build_classifier(clf_params["model"], num_classes=len(class_names), pretrained=False)
@@ -58,7 +60,11 @@ def main() -> None:
 
     present = sorted(set(labels) | set(preds))
     report = classification_report(
-        labels, preds, labels=present, target_names=[class_names[i] for i in present], output_dict=False
+        labels,
+        preds,
+        labels=present,
+        target_names=[class_names[i] for i in present],
+        output_dict=False,
     )
     print(report)
 

@@ -14,7 +14,9 @@ def _project_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def _latest_metric(client: MlflowClient, experiment_name: str, metric_key: str) -> tuple[float | None, str | None]:
+def _latest_metric(
+    client: MlflowClient, experiment_name: str, metric_key: str
+) -> tuple[float | None, str | None]:
     experiment = client.get_experiment_by_name(experiment_name)
     if experiment is None:
         return None, None

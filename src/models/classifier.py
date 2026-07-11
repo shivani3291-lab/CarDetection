@@ -11,15 +11,15 @@ def build_classifier(
     num_classes: int = 196,
     pretrained: bool = True,
 ) -> nn.Module:
-    weights = "DEFAULT" if pretrained else None
-
     if model_name == "custom_cnn":
         from src.models.cnn import CarCNN
 
         return CarCNN(num_classes=num_classes)
 
     if model_name == "resnet50":
-        model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2 if pretrained else None)
+        model = models.resnet50(
+            weights=models.ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
+        )
         model.fc = nn.Linear(model.fc.in_features, num_classes)
         return model
 

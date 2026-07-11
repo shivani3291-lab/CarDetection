@@ -120,17 +120,27 @@ class Predictor:
     def loaded(self) -> bool:
         return self._onnx_session is not None or self._detection_model is not None
 
-    def predict(self, image: Image.Image, conf_threshold: float = 0.5, image_size: int = 224) -> list[dict[str, Any]]:
+    def predict(
+        self, image: Image.Image, conf_threshold: float = 0.5, image_size: int = 224
+    ) -> list[dict[str, Any]]:
         if self._onnx_session is not None:
-            return predict_classifier(image, self._onnx_session, self.class_names, conf_threshold, image_size)
+            return predict_classifier(
+                image, self._onnx_session, self.class_names, conf_threshold, image_size
+            )
         if self._detection_model is not None:
-            return predict_detection(image, self._detection_model, self.class_names, self._torch_device, conf_threshold)
+            return predict_detection(
+                image, self._detection_model, self.class_names, self._torch_device, conf_threshold
+            )
         return []
 
-    def predict_topk(self, image: Image.Image, k: int = 5, image_size: int = 224) -> list[dict[str, Any]]:
+    def predict_topk(
+        self, image: Image.Image, k: int = 5, image_size: int = 224
+    ) -> list[dict[str, Any]]:
         """Ranked top-k guesses, classifier mode only (empty list otherwise)."""
         if self._onnx_session is not None:
-            return predict_classifier_topk(image, self._onnx_session, self.class_names, k, image_size)
+            return predict_classifier_topk(
+                image, self._onnx_session, self.class_names, k, image_size
+            )
         return []
 
 

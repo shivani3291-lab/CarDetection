@@ -101,7 +101,9 @@ def evaluate_detection_map(
 
 
 @torch.no_grad()
-def measure_inference_latency(model, sample_input: list, device, n_warmup: int = 5, n_runs: int = 20) -> float:
+def measure_inference_latency(
+    model, sample_input: list, device, n_warmup: int = 5, n_runs: int = 20
+) -> float:
     model.eval()
     images = [img.to(device) for img in sample_input]
 

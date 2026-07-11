@@ -44,7 +44,9 @@ def get_val_transform(image_size: int = 224) -> A.Compose:
     )
 
 
-def get_classifier_transform(image_size: int = 224, train: bool = True, aug_params: dict | None = None) -> A.Compose:
+def get_classifier_transform(
+    image_size: int = 224, train: bool = True, aug_params: dict | None = None
+) -> A.Compose:
     if train:
         params = aug_params or {}
         return A.Compose(

@@ -171,11 +171,16 @@ def _run_finetune(
         train_samples + feedback_samples, image_size=image_size, train=True, aug_params=aug_params
     )
     train_loader = DataLoader(
-        train_ds, batch_size=clf_params["batch_size"], shuffle=True, num_workers=clf_params.get("num_workers", 0)
+        train_ds,
+        batch_size=clf_params["batch_size"],
+        shuffle=True,
+        num_workers=clf_params.get("num_workers", 0),
     )
 
     criterion = nn.CrossEntropyLoss(label_smoothing=clf_params.get("label_smoothing", 0.0))
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=clf_params.get("weight_decay", 0.01))
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=lr, weight_decay=clf_params.get("weight_decay", 0.01)
+    )
 
     mlflow.set_experiment("car_classification")
     best_top1 = baseline_top1
@@ -193,7 +198,10 @@ def _run_finetune(
             train_loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
             metrics = evaluate_classifier(model, test_loader, device)
             mlflow.log_metrics({"train_loss": train_loss, "val_top1": metrics["top1"]}, step=epoch)
-            print(f"[feedback-retrain] epoch {epoch + 1}/{epochs} loss={train_loss:.4f} top1={metrics['top1']:.3f}")
+            print(
+                f"[feedback-retrain] epoch {epoch + 1}/{epochs} "
+                f"loss={train_loss:.4f} top1={metrics['top1']:.3f}"
+            )
             if metrics["top1"] > best_top1:
                 best_top1 = metrics["top1"]
                 best_state = {k: v.clone() for k, v in model.state_dict().items()}
@@ -208,15 +216,22 @@ def _run_finetune(
         else:
             candidate_path = root / "models" / "classifier" / "feedback_candidate.pt"
             torch.save(best_state, candidate_path)
-            print(f"[feedback-retrain] did not beat baseline - candidate saved to {candidate_path}, champion untouched.")
+            print(
+                f"[feedback-retrain] did not beat baseline - candidate saved to "
+                f"{candidate_path}, champion untouched."
+            )
 
     return {"baseline_top1": baseline_top1, "new_top1": best_top1, "promoted": promoted}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dry-run", action="store_true", help="Show what would happen, change nothing.")
-    parser.add_argument("--force", action="store_true", help="Retrain even if below min_new_samples.")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would happen, change nothing."
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Retrain even if below min_new_samples."
+    )
     args = parser.parse_args()
 
     root = _project_root()
@@ -231,7 +246,9 @@ def main() -> None:
     records = read_feedback()
     new_records = records[state["consumed_count"]:]
 
-    usable, skipped_no_label, skipped_out_of_taxonomy = select_usable_feedback(new_records, class_names)
+    usable, skipped_no_label, skipped_out_of_taxonomy = select_usable_feedback(
+        new_records, class_names
+    )
 
     print(
         f"[feedback-retrain] {len(new_records)} new feedback record(s) since last run: "
@@ -241,11 +258,17 @@ def main() -> None:
 
     min_new = feedback_cfg["min_new_samples"]
     if not args.force and len(usable) < min_new:
-        print(f"[feedback-retrain] below min_new_samples ({min_new}) - skipping, cursor left unchanged.")
+        print(
+            f"[feedback-retrain] below min_new_samples ({min_new}) - "
+            "skipping, cursor left unchanged."
+        )
         return
 
     if args.dry_run:
-        print(f"[feedback-retrain] dry run - would fine-tune on {len(usable)} sample(s). Nothing changed.")
+        print(
+            f"[feedback-retrain] dry run - would fine-tune on {len(usable)} sample(s). "
+            "Nothing changed."
+        )
         return
 
     result = _run_finetune(
@@ -257,7 +280,9 @@ def main() -> None:
     state["last_result"] = {**result, "usable_samples": len(usable)}
     save_state(root, state)
 
-    verdict = "promoted to production" if result["promoted"] else "kept as candidate (no improvement)"
+    verdict = (
+        "promoted to production" if result["promoted"] else "kept as candidate (no improvement)"
+    )
     print(
         f"[feedback-retrain] done - baseline_top1={result['baseline_top1']:.3f} "
         f"new_top1={result['new_top1']:.3f} -> {verdict}"
